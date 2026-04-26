@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My GitHub Projects</title>
+    <style>
+        :root {
+            --text-main: #f5f5f7;
+            --text-muted: #a1a1a6;
+            --accent: #0a84ff;
+            --accent-hover: #0071e3;
+            --squircle-radius: 32px; 
+            --squircle-radius-sm: 20px;
+            /* Parallax variables controlled by JS */
+            --mouse-x: 0px;
+            --mouse-y: 0px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: #000;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .bg-orbs {
+            position: fixed;
+            top: -10%; left: -10%; right: -10%; bottom: -10%;
+            z-index: -1;
+            overflow: hidden;
+            background: #000;
+            transform: translate(var(--mouse-x, 0px), var(--mouse-y, 0px));
+            transition: transform 0.1s linear; 
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.5;
+            animation: float 20s infinite ease-in-out alternate;
+        }
+
+        .orb-1 { width: 500px; height: 500px; background: #5e17eb; top: -100px; left: -100px; }
+        .orb-2 { width: 600px; height: 600px; background: #0a84ff; bottom: -200px; right: -100px; animation-delay: -5s; }
+        .orb-3 { width: 400px; height: 400px; background: #bf5af2; top: 40%; left: 30%; animation-delay: -10s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(80px, 120px) scale(1.1); }
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        header {
+            padding: 60px 20px 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            align-content: start;
+        }
+
+        .card {
+            border-radius: var(--squircle-radius);
+            padding: 20px;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            will-change: transform, opacity;
+        }
+
+        .card:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.09);
+        }
+
+        .card-img-container {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: var(--squircle-radius-sm);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            position: fixed;
+            z-index: 1001;
+            border-radius: var(--squircle-radius);
+            overflow: hidden;
+            visibility: hidden;
+            transition: top 0.3s cubic-bezier(0.34, 1.3, 0.64, 1),
+                        left 0.3s cubic-bezier(0.34, 1.3, 0.64, 1),
+                        width 0.3s cubic-bezier(0.34, 1.3, 0.64, 1),
+                        height 0.3s cubic-bezier(0.34, 1.3, 0.64, 1);
+            will-change: top, left, width, height;
+        }
+
+        .modal-inner {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            padding: 40px;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            display: flex;
+            flex-direction: column;
+            pointer-events: none;
+        }
+
+        .modal-inner.show {
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 0.3s ease 0.2s;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-main);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            z-index: 10;
+        }
+
+        .close-btn:hover { background: rgba(255, 255, 255, 0.3); }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin: 20px 0 15px;
+        }
+
+        .modal-title h2 { font-size: 2.2rem; font-weight: 700; }
+        
+        .action-btn {
+            background-color: var(--accent);
+            color: white;
+            padding: 10px 28px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover { background-color: var(--accent-hover); }
+
+        .carousel-container {
+            width: 100%;
+            height: 350px;
+            border-radius: var(--squircle-radius-sm);
+            background: rgba(0,0,0,0.4);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carousel-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: var(--squircle-radius-sm);
+            opacity: 1; 
+            transition: opacity 0.3s ease;
+        }
+
+        .carousel-indicators {
+            position: absolute;
+            bottom: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .carousel-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .carousel-dot:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .carousel-dot.active {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0, 0, 0, 0.2);
+            transform: scale(1.1);
+        }
+
+        .modal-desc {
+            line-height: 1.6; color: var(--text-muted); font-size: 1.1rem; flex-grow: 1;
+        }
+
+        footer { text-align: center; padding: 40px; }
+        .donation-link { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+        .animating-morph {
+            position: fixed !important;
+            z-index: 2000 !important;
+            pointer-events: none;
+            border-radius: var(--squircle-radius-sm) !important;
+            object-fit: cover !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
+    </div>
+
+    <header>
+        <h1>KeiranGamingTV</h1>
+        <p style="color: var(--text-muted);">My personal projects. Powered by Github.</p>
+    </header>
+
+    <main id="projectGrid"></main>
+
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    
+    <div class="modal-content glass" id="modalContent">
+        <div class="modal-inner" id="modalInner">
+            <button class="close-btn" id="closeModal">&times;</button>
+            
+            <div class="carousel-container" id="carouselContainer">
+                <img id="carouselImg" class="carousel-img" src="" alt="Screenshot">
+                <div class="carousel-indicators" id="carouselIndicators"></div>
+            </div>
+
+            <div class="modal-header">
+                <h2 id="modalTitle">Project Title</h2>
+                <a href="#" id="modalLink" class="action-btn" target="_blank">VIEW</a>
+            </div>
+
+            <p class="modal-desc" id="modalDesc"></p>
+        </div>
+    </div>
+
+    <footer>
+        <p>Like my work? ❤️ <a href="https://github.com/KeiranGamingTV/MyCryptoDonations/blob/main/addresses.md" class="donation-link" target="_blank">Donate here</a></p>
+    </footer>
+
+    <script>
+        const projectData = [
+            {
+                id: 1,
+                title: "Web Wheel of Fortune",
+                thumbnail: "wheel/1.png",
+                description: "Local, offline, and accurate Wheel of Fortune. No apps, no sketchy downloads, just a regular website. And all open-source.",
+                url: "https://keirangamingtv.github.io/web-wheel-of-fortune",
+                carouselImages: [
+                    "wheel/1.png",
+                    "wheel/2.png",
+                    "wheel/3.png",
+                    "wheel/4.png",
+                    "wheel/5.png"
+                ]
+            },
+            {
+                id: 2,
+                title: "Year Progress Bar",
+                thumbnail: "progress/1.png",
+                description: "A nice ambient progress bar to show far into the year we are.",
+                url: "https://keirangamingtv.github.io/year-progress-bar",
+                carouselImages: [
+                    "progress/1.png"
+                ]
+            },
+            {
+                id: 3,
+                title: "Polyrhythm Metronome",
+                thumbnail: "metronome/1.png",
+                description: "A recreation of those viral polyrhythm metronomes, complete with sounds.",
+                url: "https://keirangamingtv.github.io/polyrhythm-metronome",
+                carouselImages: [
+                    "metronome/1.png",
+                    "metronome/2.png",
+                    "metronome/3.png"
+                ]
+            }
+        ];
+
+        // --- AMBIENT PARALLAX BACKGROUND ---
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * -150; 
+            const y = (e.clientY / window.innerHeight - 0.5) * -150;
+            
+            document.documentElement.style.setProperty('--mouse-x', `${x}px`);
+            document.documentElement.style.setProperty('--mouse-y', `${y}px`);
+        });
+
+        const grid = document.getElementById('projectGrid');
+        const modalBackdrop = document.getElementById('modalBackdrop');
+        const modalContent = document.getElementById('modalContent');
+        const modalInner = document.getElementById('modalInner');
+        const carouselImg = document.getElementById('carouselImg');
+        const carouselContainer = document.getElementById('carouselContainer');
+        const carouselIndicators = document.getElementById('carouselIndicators');
+        
+        let currentCarouselImages = [];
+        let currentImageIndex = 0;
+        let activeCard = null; 
+        let activeCardImg = null;
+
+        function renderGrid() {
+            projectData.forEach(project => {
+                const card = document.createElement('div');
+                card.className = 'card glass';
+                card.innerHTML = `
+                    <div class="card-img-container">
+                        <img src="${project.thumbnail}" alt="${project.title}">
+                    </div>
+                    <h3>${project.title}</h3>
+                `;
+                card.onclick = () => openModal(project, card);
+                grid.appendChild(card);
+            });
+        }
+
+        function openModal(project, cardElement) {
+            activeCard = cardElement;
+            activeCardImg = activeCard.querySelector('img');
+
+            modalInner.style.display = 'flex'; 
+            modalInner.classList.remove('show'); 
+
+            document.getElementById('modalTitle').textContent = project.title;
+            document.getElementById('modalDesc').textContent = project.description;
+            document.getElementById('modalLink').href = project.url;
+            currentCarouselImages = project.carouselImages;
+            currentImageIndex = 0;
+            
+            carouselImg.style.transition = 'none';
+            carouselImg.style.opacity = '0';
+            carouselImg.src = activeCardImg.src;
+            
+            carouselIndicators.innerHTML = '';
+            currentCarouselImages.forEach((img, index) => {
+                const dot = document.createElement('div');
+                dot.className = `carousel-dot ${index === 0 ? 'active' : ''}`;
+                dot.onclick = () => {
+                    if (currentImageIndex === index) return;
+                    currentImageIndex = index;
+                    updateCarousel();
+                };
+                carouselIndicators.appendChild(dot);
+            });
+            
+            const cardRect = activeCard.getBoundingClientRect();
+            const cardImgRect = activeCardImg.getBoundingClientRect();
+
+            modalContent.style.transition = 'none';
+            modalContent.style.visibility = 'hidden'; 
+            
+            const targetWidth = Math.min(window.innerWidth * 0.9, 750);
+            
+            modalContent.style.width = `${targetWidth}px`;
+            modalContent.style.height = 'auto';
+            modalInner.style.position = 'relative';
+            const targetHeight = modalContent.getBoundingClientRect().height;
+            
+            modalInner.style.position = 'absolute'; 
+
+            const targetTop = (window.innerHeight - targetHeight) / 2;
+            const targetLeft = (window.innerWidth - targetWidth) / 2;
+
+            modalContent.style.top = `${targetTop}px`;
+            modalContent.style.left = `${targetLeft}px`;
+            modalContent.style.width = `${targetWidth}px`;
+            modalContent.style.height = `${targetHeight}px`;
+            modalContent.style.visibility = 'visible';
+            
+            const targetCarouselRect = carouselContainer.getBoundingClientRect();
+
+            modalContent.style.top = `${cardRect.top}px`;
+            modalContent.style.left = `${cardRect.left}px`;
+            modalContent.style.width = `${cardRect.width}px`;
+            modalContent.style.height = `${cardRect.height}px`;
+
+            const clone = document.createElement('img');
+            clone.src = activeCardImg.src;
+            clone.className = 'animating-morph';
+            clone.style.transition = 'none'; 
+            clone.style.top = `${cardImgRect.top}px`;
+            clone.style.left = `${cardImgRect.left}px`;
+            clone.style.width = `${cardImgRect.width}px`;
+            clone.style.height = `${cardImgRect.height}px`;
+            document.body.appendChild(clone);
+
+            modalBackdrop.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            activeCard.style.opacity = '0';
+
+            void modalContent.offsetWidth; 
+            void clone.offsetWidth;
+
+            const spring = 'top 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), left 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), width 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), height 0.3s cubic-bezier(0.34, 1.3, 0.64, 1)';
+            modalContent.style.transition = spring;
+            clone.style.transition = spring;
+            
+            modalContent.style.top = `${targetTop}px`;
+            modalContent.style.left = `${targetLeft}px`;
+            modalContent.style.width = `${targetWidth}px`;
+            modalContent.style.height = `${targetHeight}px`;
+
+            clone.style.top = `${targetCarouselRect.top}px`;
+            clone.style.left = `${targetCarouselRect.left}px`;
+            clone.style.width = `${targetCarouselRect.width}px`;
+            clone.style.height = `${targetCarouselRect.height}px`;
+
+            modalInner.classList.add('show');
+
+            setTimeout(() => {
+                carouselImg.style.opacity = '1';
+                clone.remove();
+                carouselImg.src = currentCarouselImages[0];
+            }, 400);
+        }
+
+        function close() {
+            const currentCarouselRect = carouselContainer.getBoundingClientRect();
+            const targetCardRect = activeCard.getBoundingClientRect();
+            const targetCardImgRect = activeCardImg.getBoundingClientRect();
+
+            const clone = document.createElement('img');
+            clone.src = carouselImg.src;
+            clone.className = 'animating-morph';
+            clone.style.transition = 'none';
+            clone.style.top = `${currentCarouselRect.top}px`;
+            clone.style.left = `${currentCarouselRect.left}px`;
+            clone.style.width = `${currentCarouselRect.width}px`;
+            clone.style.height = `${currentCarouselRect.height}px`;
+            document.body.appendChild(clone);
+
+            carouselImg.style.transition = 'none';
+            carouselImg.style.opacity = '0';
+
+            modalInner.classList.remove('show');
+            modalBackdrop.classList.remove('show');
+
+            setTimeout(() => {
+                modalInner.style.display = 'none';
+
+                const spring = 'top 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), left 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), width 0.3s cubic-bezier(0.34, 1.3, 0.64, 1), height 0.3s cubic-bezier(0.34, 1.3, 0.64, 1)';
+                modalContent.style.transition = spring;
+                clone.style.transition = spring;
+                
+                void modalContent.offsetWidth; 
+
+                modalContent.style.top = `${targetCardRect.top}px`;
+                modalContent.style.left = `${targetCardRect.left}px`;
+                modalContent.style.width = `${targetCardRect.width}px`;
+                modalContent.style.height = `${targetCardRect.height}px`;
+
+                clone.style.top = `${targetCardImgRect.top}px`;
+                clone.style.left = `${targetCardImgRect.left}px`;
+                clone.style.width = `${targetCardImgRect.width}px`;
+                clone.style.height = `${targetCardImgRect.height}px`;
+
+                setTimeout(() => {
+                    activeCard.style.opacity = '1';
+                    modalContent.style.visibility = 'hidden';
+                    clone.remove();
+                    document.body.style.overflow = 'auto';
+                }, 400);
+
+            }, 150); 
+        }
+
+        document.getElementById('closeModal').onclick = close;
+        modalBackdrop.onclick = close;
+
+        function updateDots() {
+            const dots = carouselIndicators.querySelectorAll('.carousel-dot');
+            dots.forEach((dot, index) => {
+                if (index === currentImageIndex) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
+        function updateCarousel() {
+            carouselImg.style.transition = 'opacity 0.15s ease';
+            carouselImg.style.opacity = 0;
+            setTimeout(() => {
+                carouselImg.src = currentCarouselImages[currentImageIndex];
+                carouselImg.style.opacity = 1;
+                updateDots(); 
+            }, 150);
+        }
+
+        renderGrid();
+    </script>
+</body>
+</html>
